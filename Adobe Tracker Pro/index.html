@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adobe Tracker Pro — Market Intelligence & Stock Scraper</title>
+  <meta name="description" content="Next-generation Adobe Stock market analytics, trend tracking, and creator intelligence powered by Apify scraper.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+  <!-- Top Ambient Glow -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Adobe Tracker <span class="gradient-text">Pro</span></h1>
+          <span class="brand-badge">Market Intelligence Engine</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <div class="live-status-pill">
+        <span class="live-radar-dot"></span>
+        <span class="live-status-text">Cloud Scraper Engine • <code>Apify Proxy Active</code></span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button class="token-btn" id="openTokenModalBtn" onclick="openTokenModal()">
+        <span class="key-icon">🔑</span>
+        <span id="tokenStatusText">Manage Apify Key</span>
+        <span class="status-indicator" id="headerKeyIndicator"></span>
+      </button>
+
+      <button class="icon-btn" onclick="openHelpModal()" title="Help & Architecture">
+        <span>💡</span>
+      </button>
+      
+      <button class="icon-btn library-toggle-btn" onclick="toggleLibraryDrawer()" title="Saved Library">
+        <span>📚</span>
+        <span class="badge" id="libraryCountBadge">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container Layout -->
+  <div class="app-layout">
+    <!-- Left Sidebar: Query & Scraper Controls -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Market Search Controls</h2>
+        <span class="actor-badge" title="Live Scraper Active">
+          <span class="pulse-dot"></span> Live Scraper Engine
+        </span>
+      </div>
+
+      <form id="searchForm" onsubmit="handleAnalyzeSubmit(event)">
+        <!-- Keyword Input -->
+        <div class="form-group">
+          <label for="searchQuery">Search Keyword / Topic</label>
+          <div class="input-with-icon">
+            <span class="input-icon">🔍</span>
+            <input type="text" id="searchQuery" placeholder="Type keyword to search..." autocomplete="off">
+            <button type="button" class="clear-input-btn" id="clearSearchBtn" onclick="clearSearchInput()" style="display:none;">✕</button>
+          </div>
+        </div>
+
+        <!-- Asset Type -->
+        <div class="form-group">
+          <label for="assetTypeSelect">Asset Category</label>
+          <div class="custom-select-wrapper">
+            <select id="assetTypeSelect">
+              <option value="all">All Media Types</option>
+              <option value="photo">Photos Only</option>
+              <option value="illustration">Illustrations</option>
+              <option value="vector">Vectors Only</option>
+              <option value="video">Videos</option>
+              <option value="template">Templates</option>
+              <option value="3d">3D Assets</option>
+              <option value="audio">Audio Tracks</option>
+              <option value="images">All Visuals (P + I + V)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Sort Order -->
+        <div class="form-group">
+          <label for="orderSelect">Adobe Stock Sorting</label>
+          <div class="custom-select-wrapper">
+            <select id="orderSelect">
+              <option value="relevance">Most Relevant</option>
+              <option value="downloads" selected>Highest Downloads (Popular)</option>
+              <option value="newest">Newest Uploads</option>
+              <option value="featured">Adobe Featured</option>
+              <option value="undiscovered">Undiscovered Gems</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Generative AI Filter -->
+        <div class="form-group">
+          <label for="aiFilterSelect">Generative AI Filtering</label>
+          <div class="custom-select-wrapper">
+            <select id="aiFilterSelect">
+              <option value="all">Include Everything</option>
+              <option value="exclude">Exclude Generative AI (Human Only)</option>
+              <option value="only">Generative AI Only</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Max Items Limit -->
+        <div class="form-group">
+          <div class="label-with-val">
+            <label for="maxItemsRange">Result Limit</label>
+            <span class="range-val" id="maxItemsVal">50 items</span>
+          </div>
+          <input type="range" id="maxItemsRange" min="10" max="200" step="10" value="50" oninput="updateRangeVal(this.value)">
+          <div class="range-labels">
+            <span>10</span>
+            <span>50</span>
+            <span>100</span>
+            <span>200</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="sidebar-actions">
+          <button type="submit" class="btn-primary glow-btn" id="analyzeBtn">
+            <span class="btn-icon">⚡</span>
+            <span class="btn-text">Analyze Market</span>
+          </button>
+          
+          <button type="button" class="btn-secondary" id="stopRunBtn" onclick="stopCurrentRun()" style="display:none;">
+            <span>⏹</span> Cancel Extraction
+          </button>
+        </div>
+      </form>
+
+      <!-- Live Actor Run Status Card -->
+      <div class="run-status-card" id="runStatusCard" style="display:none;">
+        <div class="status-top">
+          <div class="status-title-row">
+            <span class="pulse-indicator"></span>
+            <strong id="runStepTitle">Extracting Data...</strong>
+          </div>
+          <span class="run-pct" id="runPct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+        </div>
+        <div class="status-details">
+          <span id="runSubtext">Initiating actor run on Apify...</span>
+          <span id="runTimeElapsed">00:00</span>
+        </div>
+      </div>
+
+      <!-- Quick Tips Box -->
+      <div class="tips-box">
+        <div class="tips-header">
+          <span>💡 Pro Tip</span>
+        </div>
+        <p>Runs automatically via Apify Proxy (~$0.03 for 50 items) with anti-bot protection and zero IP bans.</p>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Content -->
+    <main class="main-content">
+      <!-- Top Market Analytics Banner -->
+      <section class="analytics-hero" id="analyticsHero">
+        <div class="hero-header">
+          <div>
+            <h2 id="activeQueryTitle">Market Intelligence Overview</h2>
+            <p id="activeQuerySubtitle">Enter search parameters to extract verified Adobe Stock records</p>
+          </div>
+          <div class="hero-actions">
+            <button class="tool-btn" id="exportCsvBtn" onclick="exportData('csv')" disabled>
+              <span>📄</span> Export CSV
+            </button>
+            <button class="tool-btn" id="exportJsonBtn" onclick="exportData('json')" disabled>
+              <span>💾</span> Export JSON
+            </button>
+            <button class="tool-btn" id="saveLibraryBtn" onclick="openSaveSearchModal()" disabled>
+              <span>⭐</span> Bookmark Search
+            </button>
+          </div>
+        </div>
+
+        <!-- 5 Key Analytics KPI Cards -->
+        <div class="kpi-grid">
+          <!-- Total Assets -->
+          <div class="kpi-card">
+            <div class="kpi-icon-wrap icon-cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            </div>
+            <div class="kpi-meta">
+              <span class="kpi-label">Assets Analyzed</span>
+              <strong class="kpi-value" id="kpiAssets">—</strong>
+              <span class="kpi-sub" id="kpiAssetsSub">Depth of query</span>
+            </div>
+          </div>
+
+          <!-- Total Downloads -->
+          <div class="kpi-card">
+            <div class="kpi-icon-wrap icon-purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </div>
+            <div class="kpi-meta">
+              <span class="kpi-label">Total Downloads</span>
+              <strong class="kpi-value" id="kpiDownloads">—</strong>
+              <span class="kpi-sub" id="kpiDownloadsSub">Verified buyer demand</span>
+            </div>
+          </div>
+
+          <!-- Total Views -->
+          <div class="kpi-card">
+            <div class="kpi-icon-wrap icon-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            <div class="kpi-meta">
+              <span class="kpi-label">Market Impressions</span>
+              <strong class="kpi-value" id="kpiViews">—</strong>
+              <span class="kpi-sub" id="kpiViewsSub">Total search views</span>
+            </div>
+          </div>
+
+          <!-- Median Downloads -->
+          <div class="kpi-card">
+            <div class="kpi-icon-wrap icon-amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <div class="kpi-meta">
+              <span class="kpi-label">Median Downloads</span>
+              <strong class="kpi-value" id="kpiMedian">—</strong>
+              <span class="kpi-sub" id="kpiMedianSub">Typical asset benchmark</span>
+            </div>
+          </div>
+
+          <!-- Opportunity Score Gauge -->
+          <div class="kpi-card kpi-card-highlight">
+            <div class="score-circle" id="scoreCircle">
+              <svg viewBox="0 0 36 36" class="circular-chart">
+                <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="circle-fill" id="scoreCircleFill" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <div class="score-text" id="kpiOpportunity">—</div>
+            </div>
+            <div class="kpi-meta">
+              <span class="kpi-label">Opportunity Score</span>
+              <strong class="kpi-status-tag" id="scoreRatingText">Awaiting Data</strong>
+              <span class="kpi-sub">Demand vs Competition</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Insights Bar: AI Saturation & Keyword Trends -->
+        <div class="insights-bar" id="insightsBar" style="display:none;">
+          <div class="insight-item">
+            <span class="insight-label">🤖 AI Saturation:</span>
+            <div class="mini-bar-track">
+              <div class="mini-bar-fill" id="aiSaturationBar" style="width: 0%;"></div>
+            </div>
+            <strong id="aiSaturationText">0%</strong>
+          </div>
+          <div class="insight-divider"></div>
+          <div class="insight-item">
+            <span class="insight-label">👑 Top Contributor:</span>
+            <span class="top-creator-tag" id="topCreatorTag">—</span>
+          </div>
+          <div class="insight-divider"></div>
+          <div class="insight-item">
+            <span class="insight-label">🔥 Trending Ratio:</span>
+            <strong id="highPerformerRatio">—</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results View Tabs & Toolbar -->
+      <section class="results-container">
+        <div class="results-toolbar">
+          <div class="tabs-nav">
+            <button class="tab-btn active" id="tabGridBtn" onclick="switchResultTab('grid')">
+              <span>🖼️</span> Assets Grid (<span id="resultsCount">0</span>)
+            </button>
+            <button class="tab-btn" id="tabAnalyticsBtn" onclick="switchResultTab('analytics')">
+              <span>📊</span> Visual Analytics
+            </button>
+            <button class="tab-btn" id="tabCreatorsBtn" onclick="switchResultTab('creators')">
+              <span>🏆</span> Top Creators
+            </button>
+          </div>
+
+          <div class="toolbar-controls">
+            <!-- Filter within results -->
+            <div class="filter-pill">
+              <select id="localTypeFilter" onchange="applyFiltersAndSort()">
+                <option value="all">Type: All</option>
+                <option value="photo">Type: Photo</option>
+                <option value="illustration">Type: Illustration</option>
+                <option value="vector">Type: Vector</option>
+                <option value="video">Type: Video</option>
+              </select>
+            </div>
+
+            <div class="filter-pill">
+              <select id="localAiFilter" onchange="applyFiltersAndSort()">
+                <option value="all">AI: All Assets</option>
+                <option value="ai">AI Only</option>
+                <option value="human">Human Only</option>
+              </select>
+            </div>
+
+            <div class="filter-pill">
+              <select id="localSortSelect" onchange="applyFiltersAndSort()">
+                <option value="downloads">Sort: Most Downloads</option>
+                <option value="views">Sort: Most Views</option>
+                <option value="score">Sort: Highest Score</option>
+                <option value="newest">Sort: Newest</option>
+                <option value="oldest">Sort: Oldest</option>
+              </select>
+            </div>
+
+            <!-- View Layout Toggle -->
+            <div class="layout-toggle">
+              <button class="layout-btn active" id="layoutGridBtn" onclick="setLayout('grid')" title="Grid View">⊞</button>
+              <button class="layout-btn" id="layoutListBtn" onclick="setLayout('list')" title="Compact List View">☰</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 1: Asset Grid View -->
+        <div class="tab-content" id="tabGridContent">
+          <div class="assets-grid" id="assetsGrid">
+            <!-- Empty state placeholder -->
+            <div class="empty-state">
+              <div class="empty-icon">⚡</div>
+              <h3>Ready for Live Market Extraction</h3>
+              <p>Enter any keyword or category in the sidebar, verify your Apify API key, and click <strong>Analyze Market</strong> to scrape real-time data directly from Adobe Stock using Apify Proxy.</p>
+              <button class="btn-demo-trigger" onclick="openTokenModal()">
+                <span>🔑</span> Configure Apify API Token
+              </button>
+            </div>
+          </div>
+
+          <!-- Pagination Bar -->
+          <div class="pagination-bar" id="paginationBar" style="display:none;">
+            <div class="page-info" id="pageInfoText">Showing 1-50 of 50 items</div>
+            <div class="page-buttons" id="pageButtonsContainer"></div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Visual Analytics View -->
+        <div class="tab-content" id="tabAnalyticsContent" style="display:none;">
+          <div class="analytics-dashboard-grid">
+            <!-- Download Distribution Bar Chart -->
+            <div class="dash-card">
+              <div class="dash-card-header">
+                <h3>📈 Download Distribution Ranges</h3>
+                <span class="dash-sub">Frequency of sales volume</span>
+              </div>
+              <div class="chart-container" id="downloadDistChart"></div>
+            </div>
+
+            <!-- AI vs Human Composition -->
+            <div class="dash-card">
+              <div class="dash-card-header">
+                <h3>⚖️ Content Generation Makeup</h3>
+                <span class="dash-sub">Generative AI vs Traditional Art</span>
+              </div>
+              <div class="chart-container" id="aiCompositionChart"></div>
+            </div>
+
+            <!-- Media Types Breakdown -->
+            <div class="dash-card">
+              <div class="dash-card-header">
+                <h3>🎨 Media Formats Breakdown</h3>
+                <span class="dash-sub">Vectors, Photos, Illustrations</span>
+              </div>
+              <div class="chart-container" id="mediaTypeChart"></div>
+            </div>
+
+            <!-- Trending Keywords / Tag Cloud -->
+            <div class="dash-card">
+              <div class="dash-card-header">
+                <h3>🏷️ Extracted High-Frequency Keywords</h3>
+                <span class="dash-sub">Common SEO tags used by top rankers</span>
+              </div>
+              <div class="tag-cloud" id="tagCloudContainer"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Top Creators Leaderboard -->
+        <div class="tab-content" id="tabCreatorsContent" style="display:none;">
+          <div class="creators-table-card">
+            <div class="dash-card-header">
+              <h3>🏆 Top Contributors in this Niche</h3>
+              <span class="dash-sub">Sorted by cumulative downloads & market dominance</span>
+            </div>
+            <div class="table-responsive">
+              <table class="creator-table">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Contributor</th>
+                    <th>Assets Found</th>
+                    <th>Est. Total Downloads</th>
+                    <th>Avg. Downloads/Asset</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="creatorsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Slide-out Saved Library Drawer -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleLibraryDrawer()"></div>
+  <aside class="library-drawer" id="libraryDrawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <span>📚</span>
+        <h3>Saved Market Searches</h3>
+      </div>
+      <button class="close-drawer-btn" onclick="toggleLibraryDrawer()">✕</button>
+    </div>
+    
+    <div class="drawer-tools">
+      <button class="drawer-btn" onclick="triggerImportFileInput()">
+        <span>⬆</span> Import JSON File
+      </button>
+      <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="handleFileImport(event)">
+      <button class="drawer-btn danger-hover" onclick="clearLibrary()">
+        <span>🗑</span> Clear All
+      </button>
+    </div>
+
+    <div class="library-items-list" id="libraryItemsList">
+      <div class="empty-drawer">
+        <span>📂</span>
+        <p>No saved searches yet.<br>Click "Bookmark Search" after analyzing to save snapshots.</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Asset Inspection / Lightbox Modal -->
+  <div class="modal-backdrop" id="assetModal" onclick="handleModalBackdropClick(event)">
+    <div class="modal-container inspector-modal">
+      <button class="modal-close-btn" onclick="closeAssetModal()">✕</button>
+      <div class="inspector-layout">
+        <!-- Left: Image Preview -->
+        <div class="inspector-image-col">
+          <div class="img-preview-box">
+            <img id="modalPreviewImg" src="" alt="Asset Preview" referrerpolicy="no-referrer">
+          </div>
+          <div class="modal-nav-btns">
+            <button class="nav-btn" onclick="stepAsset(-1)">← Previous</button>
+            <button class="nav-btn" onclick="stepAsset(1)">Next →</button>
+          </div>
+        </div>
+
+        <!-- Right: Deep Metadata Inspector -->
+        <div class="inspector-meta-col">
+          <div class="meta-header">
+            <span class="badge-pill badge-primary" id="modalTypeBadge">Vector</span>
+            <span class="badge-pill" id="modalAiBadge">Human Made</span>
+            <button class="copy-pill-btn" onclick="copyAssetId()" id="modalAssetIdBtn" title="Click to copy Asset ID">
+              <span class="icon">📋</span> <span id="modalAssetId">ID: #00000000</span>
+            </button>
+          </div>
+
+          <div class="title-with-copy-row">
+            <h3 class="modal-asset-title" id="modalAssetTitle">Asset Title</h3>
+            <button class="btn-copy-chip" onclick="copyAssetTitle()" title="Copy Asset Title">
+              <span class="copy-icon">📋</span> Copy Title
+            </button>
+          </div>
+          
+          <div class="modal-creator-row">
+            <span class="creator-avatar" id="modalCreatorAvatar">👤</span>
+            <div class="creator-info">
+              <strong id="modalCreatorName">Creator Name</strong>
+              <small id="modalUploadDate">Uploaded: —</small>
+            </div>
+            <a href="#" target="_blank" rel="noopener noreferrer" class="btn-portfolio-link" id="modalPortfolioLink">
+              Contributor Profile ↗
+            </a>
+          </div>
+
+          <!-- Quick Metrics Bar -->
+          <div class="modal-stats-row">
+            <div class="mstat">
+              <span class="mstat-num" id="modalDownloads">0</span>
+              <span class="mstat-lbl">Downloads</span>
+            </div>
+            <div class="mstat">
+              <span class="mstat-num" id="modalViews">0</span>
+              <span class="mstat-lbl">Views</span>
+            </div>
+            <div class="mstat">
+              <span class="mstat-num" id="modalScore">0</span>
+              <span class="mstat-lbl">Score</span>
+            </div>
+          </div>
+
+          <!-- Keywords List with Separate Copy -->
+          <div class="modal-section keywords-section">
+            <div class="section-title-row">
+              <h4>Keywords & SEO Tags (<span id="modalKeywordsCount">0</span>)</h4>
+              <div class="copy-group-btns">
+                <button class="btn-copy-chip primary" onclick="copyKeywordsComma()" title="Copy all keywords separated by comma">
+                  <span>📋 Copy All (Comma-Separated)</span>
+                </button>
+                <button class="btn-copy-chip" onclick="copyKeywordsSpace()" title="Copy all keywords space-separated">
+                  <span>📋 Space</span>
+                </button>
+              </div>
+            </div>
+            <div class="modal-tags" id="modalKeywordsList"></div>
+            <div class="tag-hint-row">
+              <small class="tag-hint-text">💡 Click any keyword badge to copy it individually.</small>
+            </div>
+          </div>
+
+          <!-- Actions Row -->
+          <div class="modal-actions-row">
+            <a href="#" target="_blank" rel="noopener noreferrer" class="btn-primary" id="modalViewOnAdobeBtn">
+              <span>↗</span> Open on Adobe Stock
+            </a>
+            <button class="btn-secondary" onclick="copyAssetTitle()">
+              <span>📝</span> Copy Title
+            </button>
+            <button class="btn-secondary" onclick="copyKeywordsComma()">
+              <span>🏷️</span> Copy Keywords
+            </button>
+            <button class="btn-secondary" onclick="copyAssetDetails()">
+              <span>📋</span> Copy Full JSON
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Apify Tokens Modal -->
+  <div class="modal-backdrop" id="tokenModal" onclick="handleModalBackdropClick(event)">
+    <div class="modal-container token-modal-box">
+      <button class="modal-close-btn" onclick="closeTokenModal()">✕</button>
+      <div class="modal-header">
+        <div class="icon-wrap">🔑</div>
+        <div>
+          <h3>Manage Apify API Tokens</h3>
+          <p>Configure your Apify authentication keys for running live stock searches</p>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="info-alert">
+          <strong>ℹ️ Free $5/mo Credit Supported:</strong> The scraper runs on Apify's default infrastructure. 50 search results cost around <strong>$0.03</strong> (100+ searches with free credits).
+        </div>
+
+        <div class="token-input-list" id="tokenInputsList"></div>
+
+        <button type="button" class="btn-add-token" onclick="addNewTokenRow()">
+          + Add Another Apify Token
+        </button>
+      </div>
+
+      <div class="modal-footer">
+        <div class="footer-left">
+          <button class="btn-secondary" onclick="testActiveTokens()">⚡ Test All Tokens</button>
+          <a href="https://console.apify.com/account/integrations" target="_blank" rel="noopener noreferrer" class="link-external">
+            Get Apify Token ↗
+          </a>
+        </div>
+        <div class="footer-right">
+          <button class="btn-secondary" onclick="closeTokenModal()">Cancel</button>
+          <button class="btn-primary" onclick="saveTokensFromModal()">Save & Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bookmark Search Modal -->
+  <div class="modal-backdrop" id="bookmarkModal" onclick="handleModalBackdropClick(event)">
+    <div class="modal-container small-modal-box">
+      <button class="modal-close-btn" onclick="closeBookmarkModal()">✕</button>
+      <div class="modal-header">
+        <div class="icon-wrap">⭐</div>
+        <div>
+          <h3>Bookmark Search</h3>
+          <p>Save this query and its extracted dataset to your browser library.</p>
+        </div>
+      </div>
+      <div class="modal-body">
+        <label for="bookmarkNameInput">Search Title</label>
+        <input type="text" id="bookmarkNameInput" placeholder="e.g. Animal Paw Vectors">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeBookmarkModal()">Cancel</button>
+        <button class="btn-primary" onclick="confirmSaveBookmark()">Save to Library</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help & Guide Modal -->
+  <div class="modal-backdrop" id="helpModal" onclick="handleModalBackdropClick(event)">
+    <div class="modal-container help-modal-box">
+      <button class="modal-close-btn" onclick="closeHelpModal()">✕</button>
+      <div class="modal-header">
+        <div class="icon-wrap">💡</div>
+        <div>
+          <h3>Adobe Tracker Pro — User Guide</h3>
+          <p>Market intelligence tool powered by cloud scraping technology</p>
+        </div>
+      </div>
+      <div class="modal-body help-body">
+        <h4>1. Anti-Bot Cloud Engine</h4>
+        <p>This extractor bypasses Adobe Stock's Cloudflare bot mitigation and retrieves verified marketplace data directly using Apify Proxy.</p>
+        
+        <h4>2. How to connect your Apify API:</h4>
+        <ol>
+          <li>Visit <a href="https://console.apify.com/account/integrations" target="_blank">Apify Console ➔ Integrations ➔ API Tokens</a>.</li>
+          <li>Copy your token (format: <code>apify_api_...</code>).</li>
+          <li>Click the <strong>Manage Apify Key</strong> button at the top of this page and paste it.</li>
+          <li>Click <strong>Save & Apply</strong>.</li>
+        </ol>
+
+        <h4>3. Scoring & Market Opportunity:</h4>
+        <ul>
+          <li><strong>Opportunity Score (0-100):</strong> Measures whether a keyword has high buyer demand relative to market saturation. Calculated via logarithmic download velocity and median benchmarks.</li>
+          <li><strong>AI Saturation:</strong> Percentage of top results generated via Generative AI tools (e.g. Midjourney, Adobe Firefly) versus traditional illustrations and photos.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="closeHelpModal()">Got It!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
